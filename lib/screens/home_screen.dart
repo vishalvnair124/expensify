@@ -1,5 +1,8 @@
+import 'package:expensify/blocs/transaction/transaction_bloc.dart';
+import 'package:expensify/screens/add_transaction_screen.dart';
 import 'package:expensify/screens/category_screen.dart';
 import 'package:expensify/screens/profile_screen.dart';
+import 'package:expensify/screens/transaction_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/auth/auth_bloc.dart';
@@ -55,11 +58,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 10),
                 FloatingActionButton.extended(
-                  heroTag: 'transaction',
                   onPressed: () {
-                    // Navigate to Add Transaction screen later
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<TransactionBloc>(),
+                          child: AddTransactionScreen(userId: widget.userId),
+                        ),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.attach_money),
                   label: const Text("Add Transaction"),
                 ),
               ],
@@ -88,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         return const Center(child: Text("Dashboard View"));
       case 1:
-        return const Center(child: Text("Transaction History View"));
+        return TransactionHistoryScreen(userId: widget.userId);
       case 2:
         return ProfileScreen(userId: widget.userId);
       default:
