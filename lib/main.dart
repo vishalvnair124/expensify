@@ -1,5 +1,6 @@
 import 'package:expensify/blocs/auth/auth_state.dart';
 import 'package:expensify/blocs/transaction/transaction_bloc.dart';
+import 'package:expensify/blocs/transaction/transaction_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -30,7 +31,7 @@ class ExpensifyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => AuthBloc()..add(CheckSession())),
-        BlocProvider(create: (_) => TransactionBloc()), // <-- Add this
+        BlocProvider(create: (_) => TransactionBloc()..add(LoadTransactions())),
       ],
       child: MaterialApp(
         title: 'Expensify',

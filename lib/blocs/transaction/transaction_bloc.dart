@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:expensify/models/transaction_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'transaction_event.dart';
 import 'transaction_state.dart';
 
@@ -8,72 +10,77 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   final Box box = Hive.box('transactions');
 
   TransactionBloc() : super(TransactionInitial()) {
-    on<LoadTransactions>((event, emit) {
-      emit(TransactionLoading());
+    on<LoadTransactions>(_onLoadTransactions);
+    on<AddTransaction>(_onAddTransaction);
+    on<UpdateTransaction>(_onUpdateTransaction);
+    on<DeleteTransaction>(_onDeleteTransaction);
+  }
+
+  void _onLoadTransactions(
+    LoadTransactions event,
+    Emitter<TransactionState> emit,
+  ) {
+    emit(TransactionLoading());
+    try {
       final all = box.values
           .map((e) => TransactionModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
       emit(TransactionLoaded(all));
-    });
+    } catch (e) {
+      emit(TransactionError("Failed to load transactions: ${e.toString()}"));
+    }
+  }
 
-    on<AddTransaction>((event, emit) async {
-      await box.add(event.transaction.toJson());
-      add(LoadTransactions());
-    });
+  Future<void> _onAddTransaction(
+    AddTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
+    await box.add(event.transaction.toJson());
+    await _updateUserBalance(
+      event.transaction.userId,
+      event.transaction,
+      isAdd: true,
+    );
+    add(LoadTransactions());
+  }
 
-    on<UpdateTransaction>((event, emit) async {
-      final box = Hive.box('transactions');
-      final usersBox = Hive.box('users');
-
-      // Adjust balance: remove old, add new
-      final user = Map<String, dynamic>.from(usersBox.get(event.old.userId)!);
-      double balance = user['currentBalance'];
-
-      balance += event.old.type == 'Income'
-          ? -event.old.amount
-          : event.old.amount;
-      balance += event.updated.type == 'Income'
-          ? event.updated.amount
-          : -event.updated.amount;
-
-      user['currentBalance'] = balance;
-      usersBox.put(event.old.userId, user);
-
-      final key = box.keys.firstWhere(
-        (k) => box.get(k) == event.old.toJson(),
-        orElse: () => null,
+  Future<void> _onUpdateTransaction(
+    UpdateTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
+    final key = _findKeyForTransaction(event.old);
+    if (key != null) {
+      // Remove old effect
+      await _updateUserBalance(event.old.userId, event.old, isDelete: true);
+      // Add new effect
+      await _updateUserBalance(
+        event.updated.userId,
+        event.updated,
+        isAdd: true,
       );
-      if (key != null) {
-        await box.put(key, event.updated.toJson());
-      }
+      await box.put(key, event.updated.toJson());
       add(LoadTransactions());
-    });
+    } else {
+      emit(TransactionError("Transaction not found"));
+    }
+  }
 
-    on<DeleteTransaction>((event, emit) async {
-      final box = Hive.box('transactions');
-      final usersBox = Hive.box('users');
-
-      final user = Map<String, dynamic>.from(
-        usersBox.get(event.transaction.userId)!,
+  Future<void> _onDeleteTransaction(
+    DeleteTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
+    final key = _findKeyForTransaction(event.transaction);
+    if (key != null) {
+      await _updateUserBalance(
+        event.transaction.userId,
+        event.transaction,
+        isDelete: true,
       );
-      double balance = user['currentBalance'];
-
-      balance += event.transaction.type == 'Income'
-          ? -event.transaction.amount
-          : event.transaction.amount;
-
-      user['currentBalance'] = balance;
-      usersBox.put(event.transaction.userId, user);
-
-      final key = box.keys.firstWhere(
-        (k) => box.get(k) == event.transaction.toJson(),
-        orElse: () => null,
-      );
-      if (key != null) {
-        await box.delete(key);
-      }
+      await box.delete(key);
       add(LoadTransactions());
-    });
+    } else {
+      emit(TransactionError("Transaction not found"));
+    }
   }
 
   dynamic _findKeyForTransaction(TransactionModel tx) {
@@ -86,11 +93,55 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
             value.amount == tx.amount &&
             value.type == tx.type &&
             value.category == tx.category &&
-            value.date == tx.date &&
+            value.date.toIso8601String() == tx.date.toIso8601String() &&
             value.note == tx.note;
       }).key;
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<void> _updateUserBalance(
+    int userId,
+    TransactionModel tx, {
+    bool isAdd = false,
+    bool isDelete = false,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final users = prefs.getStringList('users') ?? [];
+
+    for (int i = 0; i < users.length; i++) {
+      final user = jsonDecode(users[i]);
+      if (user['userId'] == userId) {
+        double balance = (user['currentBalance'] ?? 0).toDouble();
+        final amount = tx.amount;
+
+        if (tx.type == 'Income') {
+          balance += isAdd ? amount : -amount;
+        } else {
+          balance += isAdd ? -amount : amount;
+        }
+
+        if (balance < 0) balance = 0;
+        user['currentBalance'] = balance;
+        users[i] = jsonEncode(user);
+        break;
+      }
+    }
+
+    await prefs.setStringList('users', users);
+
+    // Also update the 'user' key (current session)
+    final currentUserString = prefs.getString('user');
+    if (currentUserString != null) {
+      final currentUser = jsonDecode(currentUserString);
+      if (currentUser['userId'] == userId) {
+        final updatedUser = jsonDecode(
+          users.firstWhere((u) => jsonDecode(u)['userId'] == userId),
+        );
+        currentUser['currentBalance'] = updatedUser['currentBalance'];
+        await prefs.setString('user', jsonEncode(currentUser));
+      }
     }
   }
 }

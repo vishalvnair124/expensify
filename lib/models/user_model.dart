@@ -26,7 +26,6 @@ class UserModel {
     name: json['name'],
     email: json['email'],
     password: json['password'],
-    currentBalance: (json['currentBalance'] as num)
-        .toDouble(), // ✅ read from JSON
+    currentBalance: (json['currentBalance'] as num).toDouble(),
   );
 }

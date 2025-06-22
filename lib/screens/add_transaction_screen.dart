@@ -1,11 +1,12 @@
-import 'dart:convert';
+// import 'dart:convert';
+// import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:expensify/blocs/transaction/transaction_bloc.dart';
 import 'package:expensify/blocs/transaction/transaction_event.dart';
 import 'package:expensify/blocs/transaction/transaction_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -60,41 +61,41 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final userData = prefs.getString('user');
+    // final prefs = await SharedPreferences.getInstance();
+    // final userData = prefs.getString('user');
 
-    if (userData == null) return;
+    // if (userData == null) return;
 
-    final userMap = Map<String, dynamic>.from(jsonDecode(userData));
-    double currentBalance = (userMap['currentBalance'] ?? 0).toDouble();
+    // final userMap = Map<String, dynamic>.from(jsonDecode(userData));
+    // double currentBalance = (userMap['currentBalance'] ?? 0).toDouble();
 
-    // Update balance based on type
-    if (_type == "Income") {
-      currentBalance += amount;
-    } else if (_type == "Expense") {
-      if (amount > currentBalance) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Insufficient balance")));
-        return;
-      }
-      currentBalance -= amount;
-    }
+    // // Update balance based on type
+    // if (_type == "Income") {
+    //   currentBalance += amount;
+    // } else if (_type == "Expense") {
+    //   if (amount > currentBalance) {
+    //     ScaffoldMessenger.of(
+    //       context,
+    //     ).showSnackBar(const SnackBar(content: Text("Insufficient balance")));
+    //     return;
+    //   }
+    //   currentBalance -= amount;
+    // }
 
-    // Update user in prefs
-    userMap['currentBalance'] = currentBalance;
-    await prefs.setString('user', jsonEncode(userMap));
+    // // Update user in prefs
+    // userMap['currentBalance'] = currentBalance;
+    // await prefs.setString('user', jsonEncode(userMap));
 
-    // Also update in 'users' list
-    List<String> userList = prefs.getStringList('users') ?? [];
-    userList = userList.map((u) {
-      final map = jsonDecode(u);
-      if (map['userId'] == widget.userId) {
-        map['currentBalance'] = currentBalance;
-      }
-      return jsonEncode(map);
-    }).toList();
-    await prefs.setStringList('users', userList);
+    // // Also update in 'users' list
+    // List<String> userList = prefs.getStringList('users') ?? [];
+    // userList = userList.map((u) {
+    //   final map = jsonDecode(u);
+    //   if (map['userId'] == widget.userId) {
+    //     map['currentBalance'] = currentBalance;
+    //   }
+    //   return jsonEncode(map);
+    // }).toList();
+    // await prefs.setStringList('users', userList);
 
     final transaction = TransactionModel(
       userId: widget.userId,
