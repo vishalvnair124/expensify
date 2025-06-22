@@ -1,71 +1,145 @@
+import 'package:expensify/blocs/dashboard/dashboard_bloc.dart';
+import 'package:expensify/blocs/dashboard/dashboard_event.dart';
+import 'package:expensify/blocs/dashboard/dashboard_state.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DashboardScreen extends StatefulWidget {
   final int userId;
   const DashboardScreen({super.key, required this.userId});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  double _currentBalance = 0;
-
   @override
   void initState() {
     super.initState();
-    _loadCurrentBalance();
+    context.read<DashboardBloc>().add(LoadDashboardData(widget.userId));
   }
 
-  Future<void> _loadCurrentBalance() async {
-    final prefs = await SharedPreferences.getInstance();
-    final users = prefs.getStringList('users') ?? [];
-
-    for (final userJson in users) {
-      final userMap = jsonDecode(userJson);
-      if (userMap['userId'] == widget.userId) {
-        setState(() {
-          _currentBalance = (userMap['currentBalance'] ?? 0).toDouble();
-        });
-        break;
-      }
-    }
+  Widget buildRow(String title, String val) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: TextStyle(fontSize: 16)),
+          Text(val, style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Card(
-          elevation: 6,
-          margin: const EdgeInsets.all(20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
+      body: BlocBuilder<DashboardBloc, DashboardState>(
+        builder: (context, st) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "Current Balance",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                // Summary
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        buildRow(
+                          "Total Income",
+                          "₹${st.totalIncome.toStringAsFixed(2)}",
+                        ),
+                        buildRow(
+                          "Total Expense",
+                          "₹${st.totalExpense.toStringAsFixed(2)}",
+                        ),
+                        Divider(),
+                        buildRow(
+                          "Avg Daily Income",
+                          "₹${st.avgDailyIncome.toStringAsFixed(2)}",
+                        ),
+                        buildRow(
+                          "Avg Daily Expense",
+                          "₹${st.avgDailyExpense.toStringAsFixed(2)}",
+                        ),
+                        Divider(),
+                        buildRow("Transactions", "${st.totalTransactions}"),
+                        buildRow("Income count", "${st.incomeCount}"),
+                        buildRow("Expense count", "${st.expenseCount}"),
+                        Divider(),
+                        buildRow(
+                          "Min txn",
+                          "₹${st.minTransaction.toStringAsFixed(2)}",
+                        ),
+                        buildRow(
+                          "Max txn",
+                          "₹${st.maxTransaction.toStringAsFixed(2)}",
+                        ),
+                        Divider(),
+                        buildRow(
+                          "Max expense (month)",
+                          "₹${st.maxExpenseMonth.toStringAsFixed(2)}",
+                        ),
+                        buildRow(
+                          "Max expense (week)",
+                          "₹${st.maxExpenseWeek.toStringAsFixed(2)}",
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  "₹$_currentBalance",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: _currentBalance >= 0 ? Colors.green : Colors.red,
+                SizedBox(height: 16),
+                // Category breakdown
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Income by Category",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        ...st.incomeByCategory.entries.map(
+                          (e) =>
+                              buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Expense by Category",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        ...st.expenseByCategory.entries.map(
+                          (e) =>
+                              buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                // Datewise totals
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Totals by Date",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        ...st.totalsByDate.entries.map(
+                          (e) =>
+                              buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
