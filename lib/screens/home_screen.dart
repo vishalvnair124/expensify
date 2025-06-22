@@ -1,3 +1,4 @@
+import 'package:expensify/screens/category_screen.dart';
 import 'package:expensify/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,11 +42,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 FloatingActionButton.extended(
                   heroTag: 'category',
                   onPressed: () {
-                    // Navigate to Add Category screen later
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CategoryScreen(userId: widget.userId),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.category),
                   label: const Text("Add Category"),
                 ),
+
                 const SizedBox(height: 10),
                 FloatingActionButton.extended(
                   heroTag: 'transaction',
