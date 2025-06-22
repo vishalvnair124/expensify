@@ -144,6 +144,7 @@ class TransactionHistoryScreen extends StatelessWidget {
               context.read<TransactionBloc>().add(
                 UpdateTransaction(old: tx, updated: updatedTx),
               );
+
               Navigator.pop(context);
             },
             child: const Text("Save"),

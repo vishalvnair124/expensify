@@ -22,23 +22,57 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     });
 
     on<UpdateTransaction>((event, emit) async {
-      final key = _findKeyForTransaction(event.old);
+      final box = Hive.box('transactions');
+      final usersBox = Hive.box('users');
+
+      // Adjust balance: remove old, add new
+      final user = Map<String, dynamic>.from(usersBox.get(event.old.userId)!);
+      double balance = user['currentBalance'];
+
+      balance += event.old.type == 'Income'
+          ? -event.old.amount
+          : event.old.amount;
+      balance += event.updated.type == 'Income'
+          ? event.updated.amount
+          : -event.updated.amount;
+
+      user['currentBalance'] = balance;
+      usersBox.put(event.old.userId, user);
+
+      final key = box.keys.firstWhere(
+        (k) => box.get(k) == event.old.toJson(),
+        orElse: () => null,
+      );
       if (key != null) {
         await box.put(key, event.updated.toJson());
-        add(LoadTransactions());
-      } else {
-        emit(TransactionError("Transaction not found"));
       }
+      add(LoadTransactions());
     });
 
     on<DeleteTransaction>((event, emit) async {
-      final key = _findKeyForTransaction(event.transaction);
+      final box = Hive.box('transactions');
+      final usersBox = Hive.box('users');
+
+      final user = Map<String, dynamic>.from(
+        usersBox.get(event.transaction.userId)!,
+      );
+      double balance = user['currentBalance'];
+
+      balance += event.transaction.type == 'Income'
+          ? -event.transaction.amount
+          : event.transaction.amount;
+
+      user['currentBalance'] = balance;
+      usersBox.put(event.transaction.userId, user);
+
+      final key = box.keys.firstWhere(
+        (k) => box.get(k) == event.transaction.toJson(),
+        orElse: () => null,
+      );
       if (key != null) {
         await box.delete(key);
-        add(LoadTransactions());
-      } else {
-        emit(TransactionError("Transaction not found"));
       }
+      add(LoadTransactions());
     });
   }
 

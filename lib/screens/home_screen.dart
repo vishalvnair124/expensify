@@ -1,6 +1,7 @@
 import 'package:expensify/blocs/transaction/transaction_bloc.dart';
 import 'package:expensify/screens/add_transaction_screen.dart';
 import 'package:expensify/screens/category_screen.dart';
+import 'package:expensify/screens/dashboard_screen.dart';
 import 'package:expensify/screens/profile_screen.dart';
 import 'package:expensify/screens/transaction_history_screen.dart';
 import 'package:flutter/material.dart';
@@ -96,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPage() {
     switch (_selectedIndex) {
       case 0:
-        return const Center(child: Text("Dashboard View"));
+        return DashboardScreen(userId: widget.userId);
       case 1:
         return TransactionHistoryScreen(userId: widget.userId);
       case 2:
