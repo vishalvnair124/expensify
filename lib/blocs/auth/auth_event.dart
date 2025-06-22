@@ -5,12 +5,14 @@ class RegisterUser extends AuthEvent {
   final String name;
   final String email;
   final String password;
+  final double currentBalance; // ✅ new field
 
   RegisterUser({
     required this.userId,
     required this.name,
     required this.email,
     required this.password,
+    required this.currentBalance, // ✅ required parameter
   });
 }
 

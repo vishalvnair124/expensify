@@ -18,13 +18,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
     final prefs = await SharedPreferences.getInstance();
+
     final userMap = {
       'userId': event.userId,
       'name': event.name,
       'email': event.email,
       'password': event.password,
+      'currentBalance': event.currentBalance, // ✅ new field
     };
-    await prefs.setString('user', jsonEncode(userMap));
+
+    final usersJson = prefs.getStringList('users') ?? [];
+    usersJson.add(jsonEncode(userMap));
+
+    await prefs.setStringList('users', usersJson); // store list of users
+    await prefs.setString('user', jsonEncode(userMap)); // set active session
+
     emit(AuthSuccess(event.userId, event.name));
   }
 

@@ -15,6 +15,7 @@ class RegisterScreen extends StatelessWidget {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
+    final balanceController = TextEditingController(); // ✅ new controller
 
     return Scaffold(
       appBar: AppBar(title: const Text("Register")),
@@ -23,10 +24,10 @@ class RegisterScreen extends StatelessWidget {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthSuccess) {
-              Navigator.pop(context); // Close RegisterScreen, go back to Home
+              Navigator.pop(context); // Close RegisterScreen
             }
           },
-          child: Column(
+          child: ListView(
             children: [
               TextField(
                 controller: nameController,
@@ -41,6 +42,13 @@ class RegisterScreen extends StatelessWidget {
                 decoration: const InputDecoration(labelText: "Password"),
                 obscureText: true,
               ),
+              TextField(
+                controller: balanceController,
+                decoration: const InputDecoration(
+                  labelText: "Initial Balance (₹)",
+                ),
+                keyboardType: TextInputType.number,
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
@@ -48,6 +56,27 @@ class RegisterScreen extends StatelessWidget {
                   final name = nameController.text.trim();
                   final email = emailController.text.trim().toLowerCase();
                   final password = passwordController.text.trim();
+                  final balanceText = balanceController.text.trim();
+
+                  if (name.isEmpty ||
+                      email.isEmpty ||
+                      password.isEmpty ||
+                      balanceText.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("All fields are required")),
+                    );
+                    return;
+                  }
+
+                  final balance = double.tryParse(balanceText);
+                  if (balance == null || balance < 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Balance must be a number ≥ 0"),
+                      ),
+                    );
+                    return;
+                  }
 
                   final usersJson = prefs.getStringList('users') ?? [];
 
@@ -70,6 +99,7 @@ class RegisterScreen extends StatelessWidget {
                     'name': name,
                     'email': email,
                     'password': password,
+                    'currentBalance': balance, // ✅ store balance
                   };
 
                   usersJson.add(jsonEncode(userMap));
@@ -82,6 +112,7 @@ class RegisterScreen extends StatelessWidget {
                       name: name,
                       email: email,
                       password: password,
+                      currentBalance: balance, // ✅ pass to event
                     ),
                   );
                 },
