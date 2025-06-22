@@ -29,7 +29,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         maxTransaction = double.negativeInfinity;
     double maxExpenseMonth = 0, maxExpenseWeek = 0;
 
-    Map<int, double> monthlyExpenses = {}; // month -> amount
+    // Map<int, double> monthlyExpenses = {}; // month -> amount
     Map<int, double> weeklyExpenses = {}; // week index -> amount
     Map<String, double> monthlyIncome = {};
     Map<String, double> monthlyExpense = {};
