@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class DashboardScreen extends StatefulWidget {
   final int userId;
   const DashboardScreen({super.key, required this.userId});
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -24,8 +25,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 16)),
-          Text(val, style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(title, style: const TextStyle(fontSize: 16)),
+          Text(val, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -34,18 +35,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Dashboard')),
       body: BlocBuilder<DashboardBloc, DashboardState>(
         builder: (context, st) {
+          if (st is DashboardInitial) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 // Summary
                 Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       children: [
+                        Text(
+                          'Current Balance: ₹${st.currentBalance.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: st.currentBalance >= 0
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         buildRow(
                           "Total Income",
                           "₹${st.totalIncome.toStringAsFixed(2)}",
@@ -54,44 +75,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           "Total Expense",
                           "₹${st.totalExpense.toStringAsFixed(2)}",
                         ),
-                        Divider(),
+                        const Divider(),
                         buildRow(
-                          "Avg Daily Income",
+                          "Avg Monthly Income",
                           "₹${st.avgDailyIncome.toStringAsFixed(2)}",
                         ),
                         buildRow(
-                          "Avg Daily Expense",
+                          "Avg Monthly Expense",
                           "₹${st.avgDailyExpense.toStringAsFixed(2)}",
                         ),
-                        Divider(),
-                        buildRow("Transactions", "${st.totalTransactions}"),
-                        buildRow("Income count", "${st.incomeCount}"),
-                        buildRow("Expense count", "${st.expenseCount}"),
-                        Divider(),
+                        const Divider(),
                         buildRow(
-                          "Min txn",
+                          "Total Transactions",
+                          "${st.totalTransactions}",
+                        ),
+                        buildRow("Income Count", "${st.incomeCount}"),
+                        buildRow("Expense Count", "${st.expenseCount}"),
+                        const Divider(),
+                        buildRow(
+                          "Min Transaction",
                           "₹${st.minTransaction.toStringAsFixed(2)}",
                         ),
                         buildRow(
-                          "Max txn",
+                          "Max Transaction",
                           "₹${st.maxTransaction.toStringAsFixed(2)}",
                         ),
-                        Divider(),
+                        const Divider(),
                         buildRow(
-                          "Max expense (month)",
+                          "Max Expense (Month)",
                           "₹${st.maxExpenseMonth.toStringAsFixed(2)}",
                         ),
                         buildRow(
-                          "Max expense (week)",
+                          "Max Expense (Week)",
                           "₹${st.maxExpenseWeek.toStringAsFixed(2)}",
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
-                // Category breakdown
+                const SizedBox(height: 16),
+
+                // Category Breakdown
                 Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
@@ -100,15 +129,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           "Income by Category",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
                         ...st.incomeByCategory.entries.map(
                           (e) =>
                               buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         const Text(
                           "Expense by Category",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
                         ...st.expenseByCategory.entries.map(
                           (e) =>
                               buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),
@@ -117,17 +148,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
-                // Datewise totals
+                const SizedBox(height: 16),
+
+                // Totals by Date (for plotting charts)
                 Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           "Totals by Date",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        const SizedBox(height: 8),
                         ...st.totalsByDate.entries.map(
                           (e) =>
                               buildRow(e.key, "₹${e.value.toStringAsFixed(2)}"),

@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:expensify/models/transaction_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 import 'dart:math';
@@ -85,6 +88,18 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     final avgDailyIncome = totalIncome / daysCount;
     final avgDailyExpense = totalExpense / daysCount;
 
+    final prefs = await SharedPreferences.getInstance();
+    final users = prefs.getStringList('users') ?? [];
+    double currentBalance = 0;
+
+    for (final userStr in users) {
+      final user = jsonDecode(userStr);
+      if (user['userId'] == ev.userId) {
+        currentBalance = (user['currentBalance'] ?? 0).toDouble();
+        break;
+      }
+    }
+
     emit(
       DashboardState(
         totalIncome: totalIncome,
@@ -106,6 +121,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         transactions: all,
         monthlyIncome: monthlyIncome,
         monthlyExpense: monthlyExpense,
+        currentBalance: currentBalance,
       ),
     );
   }

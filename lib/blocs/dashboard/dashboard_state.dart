@@ -20,6 +20,7 @@ class DashboardState {
 
   final Map<String, double> monthlyIncome; // NEW
   final Map<String, double> monthlyExpense; // NEW
+  final double currentBalance;
 
   DashboardState({
     required this.totalIncome,
@@ -39,6 +40,7 @@ class DashboardState {
     required this.transactions,
     required this.monthlyIncome, // NEW
     required this.monthlyExpense, // NEW
+    required this.currentBalance,
   });
 }
 
@@ -62,5 +64,6 @@ class DashboardInitial extends DashboardState {
         transactions: [],
         monthlyIncome: {}, // NEW
         monthlyExpense: {}, // NEW
+        currentBalance: 0, // NEW
       );
 }
