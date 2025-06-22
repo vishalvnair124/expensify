@@ -44,8 +44,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: _addCategory,
-              icon: const Icon(Icons.add),
-              label: const Text("Add Category"),
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "Add Category",
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                minimumSize: const Size(double.infinity, 50),
+              ),
             ),
             const Divider(height: 30),
             const Text("Your Categories", style: TextStyle(fontSize: 16)),

@@ -224,8 +224,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: _saveTransaction,
-                icon: const Icon(Icons.save),
-                label: const Text("Save Transaction"),
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: const Text(
+                  "Save Transaction",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(45),
+                  backgroundColor: Colors.indigo,
+                ),
               ),
             ],
           ),
