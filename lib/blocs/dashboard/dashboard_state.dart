@@ -22,6 +22,9 @@ class DashboardState {
   final Map<String, double> monthlyExpense; // NEW
   final double currentBalance;
 
+  final Map<String, Map<String, double>> monthlyIncomeByCategory;
+  final Map<String, Map<String, double>> monthlyExpenseByCategory;
+
   DashboardState({
     required this.totalIncome,
     required this.totalExpense,
@@ -41,6 +44,8 @@ class DashboardState {
     required this.monthlyIncome, // NEW
     required this.monthlyExpense, // NEW
     required this.currentBalance,
+    this.monthlyIncomeByCategory = const {}, // Default empty map
+    this.monthlyExpenseByCategory = const {}, // Default empty map
   });
 }
 
@@ -65,5 +70,7 @@ class DashboardInitial extends DashboardState {
         monthlyIncome: {}, // NEW
         monthlyExpense: {}, // NEW
         currentBalance: 0, // NEW
+        monthlyIncomeByCategory: {}, // NEW
+        monthlyExpenseByCategory: {}, // NEW
       );
 }

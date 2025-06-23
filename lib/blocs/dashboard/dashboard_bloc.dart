@@ -32,46 +32,55 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         maxTransaction = double.negativeInfinity;
     double maxExpenseMonth = 0, maxExpenseWeek = 0;
 
-    // Map<int, double> monthlyExpenses = {}; // month -> amount
-    Map<int, double> weeklyExpenses = {}; // week index -> amount
+    Map<int, double> weeklyExpenses = {};
     Map<String, double> monthlyIncome = {};
     Map<String, double> monthlyExpense = {};
+
+    // ✅ Declare your new maps
+    Map<String, Map<String, double>> monthlyIncomeByCategory = {};
+    Map<String, Map<String, double>> monthlyExpenseByCategory = {};
 
     for (var tx in all) {
       final amount = tx.amount;
       final date = tx.date;
       final dateKey =
           "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+      final monthKey = "${date.year}-${date.month.toString().padLeft(2, '0')}";
 
       if (tx.type == 'Income') {
         totalIncome += amount;
+
         incomeByCategory[tx.category] =
             (incomeByCategory[tx.category] ?? 0) + amount;
+
+        monthlyIncome[monthKey] = (monthlyIncome[monthKey] ?? 0) + amount;
+
+        // ✅ Monthly income by category
+        monthlyIncomeByCategory[monthKey] ??= {};
+        monthlyIncomeByCategory[monthKey]![tx.category] =
+            (monthlyIncomeByCategory[monthKey]![tx.category] ?? 0) + amount;
       } else {
         totalExpense += amount;
+
         expenseByCategory[tx.category] =
             (expenseByCategory[tx.category] ?? 0) + amount;
 
-        // Monthly expense
-        final monthKey =
-            "${date.year}-${date.month.toString().padLeft(2, '0')}";
         monthlyExpense[monthKey] = (monthlyExpense[monthKey] ?? 0) + amount;
 
-        // Weekly expense (week number = day ~/ 7)
+        // ✅ Monthly expense by category
+        monthlyExpenseByCategory[monthKey] ??= {};
+        monthlyExpenseByCategory[monthKey]![tx.category] =
+            (monthlyExpenseByCategory[monthKey]![tx.category] ?? 0) + amount;
+
+        // Weekly expense
         int weekKey = (date.day - 1) ~/ 7;
         weeklyExpenses[weekKey] = (weeklyExpenses[weekKey] ?? 0) + amount;
-      }
-
-      // Common
-      if (tx.type == 'Income') {
-        final monthKey =
-            "${date.year}-${date.month.toString().padLeft(2, '0')}";
-        monthlyIncome[monthKey] = (monthlyIncome[monthKey] ?? 0) + amount;
       }
 
       totalsByDate[dateKey] =
           (totalsByDate[dateKey] ?? 0) +
           (tx.type == 'Income' ? amount : -amount);
+
       distinctDays.add(DateTime(date.year, date.month, date.day));
       minTransaction = min(minTransaction, amount);
       maxTransaction = max(maxTransaction, amount);
@@ -122,6 +131,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         monthlyIncome: monthlyIncome,
         monthlyExpense: monthlyExpense,
         currentBalance: currentBalance,
+        monthlyIncomeByCategory: monthlyIncomeByCategory,
+        monthlyExpenseByCategory: monthlyExpenseByCategory,
       ),
     );
   }
