@@ -105,9 +105,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               ),
                             ),
                           ),
-                          ...items
-                              .map((tx) => _buildTransactionTile(context, tx))
-                              .toList(),
+                          ...items.map(
+                            (tx) => _buildTransactionTile(context, tx),
+                          ),
                         ],
                       );
                     }).toList(),

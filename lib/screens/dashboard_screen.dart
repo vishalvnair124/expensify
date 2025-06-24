@@ -273,7 +273,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        Divider(),
+                        const Divider(),
                         const SizedBox(height: 12),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -287,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         if (incomeMap.isNotEmpty)
                           AspectRatio(
                             aspectRatio: 1.3,
@@ -334,7 +334,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                         const SizedBox(height: 12),
-                        Divider(),
+                        const Divider(),
                         const SizedBox(height: 16),
 
                         buildRow(
